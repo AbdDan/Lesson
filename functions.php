@@ -4,10 +4,10 @@ session_start();
 function get_user_by_email($email)
 {
     //подключаемся к БД
-    $pdo = new PDO("mysql:host=localhost;port=3307;dbname=well;", "root", "");
+    $pdo = new PDO("mysql:host=localhost;port=3307;dbname=crud_db;", "root", "");
 
     //создаем запрос
-    $sql = "SELECT * FROM new WHERE email=:email";
+    $sql = "SELECT * FROM products WHERE email=:email";
     $statement = $pdo->prepare($sql);
     $statement->execute(["email" => $email]);
     $user = $statement->fetch(PDO::FETCH_ASSOC);
@@ -24,23 +24,26 @@ function set_flash_message($name, $message) {
 
 }
 
-function add_user($email,$password) {
-	$pdo = new PDO("mysql:host=localhost;port=3307;dbname=well;", "root", "");
-	$sql = "INSERT INTO new (email,password) VALUES (:email,:password)";
+function add_user($email,$password,$role) {
+	$pdo = new PDO("mysql:host=localhost;port=3307;dbname=crud_db;", "root", "");
+	$sql = "INSERT INTO products (email,password,role) VALUES (:email,:password,:role)";
 	$statement = $pdo->prepare($sql);
 	$statement->execute([
 	"email" => $email,
-	"password" => password_hash($password, PASSWORD_DEFAULT)
+	"role" => $role,
+	'password' => password_hash($password, PASSWORD_DEFAULT)
 
 ]);
 
-return $pdo->lastInsertId();
+ $_SESSION['id'] = $pdo->lastInsertId();
+
+  return $_SESSION['id'];
 }
 
 
 function login ($email, $password) {
-	$pdo = new PDO("mysql:host=localhost;port=3307;dbname=well;", "root", "");
-	$sql = "SELECT * FROM new WHERE email=:email";
+	$pdo = new PDO("mysql:host=localhost;port=3307;dbname=crud_db;", "root", "");
+	$sql = "SELECT * FROM products WHERE email=:email";
     $statement = $pdo->prepare($sql);
     $statement->execute([
         'email'  => $email
@@ -57,19 +60,54 @@ function login ($email, $password) {
 }
 
 
+function select_all_users() {
+    $pdo = new PDO("mysql:host=localhost;port=3307;dbname=crud_db;", "root", "");
+    $sql = "SELECT * FROM products";
+    $statement = $pdo->prepare($sql);
+    $statement->execute();
+    $result = $statement->fetchAll(PDO::FETCH_ASSOC);
+    return $result;
+}
 
 
-function is_admin() 
+function is_admin()
 {
-	  if (isset($_SESSION['role']) && $_SESSION['role'] == 'admin') {
+    //подключаемся к БД
+    $pdo = new PDO("mysql:host=localhost;port=3307;dbname=crud_db;", "root", "");
+
+    //создаем запрос
+    $sql = "SELECT * FROM products WHERE role=:role";
+    $statement = $pdo->prepare($sql);
+    $statement->execute();
+    //fetch_assoc формирует ответ из БД в нормальный массив
+    $user = $statement->fetchAll(PDO::FETCH_ASSOC);
+
+
+    if ($user == 'admin') {
         return true;
-    } 
-    else {
+    } else {
         return false;
     }
 }
 
 
+
+
+// function check_admin () {
+// 	if($_SESSION['role'] == 'admin') {
+// 		return true;
+// 	}
+// 	return false;
+// }
+
+// function is_not_logged_in () {
+
+//     if(isset($_SESSION['email']) && !empty($_SESSION['email'])) {
+//         return false;
+//     }
+
+//     return true;
+// }
 
 
 
@@ -83,3 +121,5 @@ function display_flash_message($name) {
 
 
 ?>
+
+
